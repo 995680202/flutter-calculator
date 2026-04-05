@@ -1,0 +1,71 @@
+name: Build Flutter APK
+
+on:
+  workflow_dispatch:  # 手动触发
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+        
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.41.6'
+        channel: 'stable'
+        
+    - name: Install dependencies
+      run: flutter pub get
+      
+    - name: Build APK (Debug)
+      run: flutter build apk --debug
+      
+    - name: Build APK (Release)
+      run: flutter build apk --release
+      
+    - name: Upload APK artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: calculator-apk
+        path: |
+          build/app/outputs/flutter-apk/app-debug.apk
+          build/app/outputs/flutter-apk/app-release.apk
+        retention-days: 7
+        
+    - name: Create Release
+      if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          build/app/outputs/flutter-apk/app-release.apk
+        tag_name: v1.0.0
+        name: Calculator APK v1.0.0
+        body: |
+          # 灵悦计算器 · 优化版
+          
+          ## 功能特性
+          - ✅ 括号功能（智能插入）
+          - ✅ 百分比功能（智能计算）
+          - ✅ 历史记录（美观格式）
+          - ✅ 键盘支持（完整键盘输入）
+          - ✅ 现代UI设计（磨砂效果）
+          
+          ## 修复的bug
+          1. 括号功能缺失
+          2. 百分比功能简单
+          3. 历史记录格式差
+          4. 键盘支持缺失
+          5. UI设计差异

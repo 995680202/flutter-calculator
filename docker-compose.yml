@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  flutter-builder:
+    image: cirrusci/flutter:3.41.6
+    volumes:
+      - .:/app
+      - ./output:/output
+    working_dir: /app
+    command: >
+      sh -c "
+      # 尝试接受许可证（非交互式）
+      yes | sdkmanager --licenses 2>/dev/null || true &&
+      # 获取依赖
+      flutter pub get &&
+      # 构建APK
+      flutter build apk --release &&
+      # 复制APK到输出目录
+      cp build/app/outputs/flutter-apk/app-release.apk /output/calculator.apk &&
+      echo 'APK构建完成！文件在 output/calculator.apk'
+      "
